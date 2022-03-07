@@ -32,6 +32,7 @@ let liquidityPoolX;
 let liquidityPoolY;
 let unscaledEquilibriumLiquidity;
 let unscaledLiquidityPoolBalance;
+let unscaledIncentivePoolBalance;
 let equilibriumLiquidity = 50;
 let liquidityPoolBalance = 50;
 
@@ -42,18 +43,23 @@ let incentivePoolHeight;
 let incentivePoolX;
 let incentivePoolY;
 
-let incentivePoolBalance = 0;
-let incentivePoolReward = 0;
+let incentivePoolBalance;
+let incentivePoolReward;
 
+// Sliders
 let maxPunishmentSlider;
 let equilibriumLiquiditySlider;
 let poolLiquiditySlider;
+let incentivePoolLiquiditySlider;
+
+let sliderY;
+let sliderX;
 
 function setup() {
   canvasWidth = displayWidth;
   canvasHeight = displayHeight;
 
-  marginX = canvasWidth / 7;
+  marginX = canvasWidth / 6;
   marginY = canvasHeight / 6;
 
   liquidityPoolWidth = canvasWidth / 15;
@@ -64,25 +70,31 @@ function setup() {
 
   unscaledEquilibriumLiquidity = liquidityPoolHeight / 2;
   unscaledLiquidityPoolBalance = unscaledEquilibriumLiquidity;
+  unscaledIncentivePoolBalance = 0;
+  incentivePoolBalance = 0;
+  incentivePoolReward = 0;
 
   liquidityPoolX = canvasWidth / 2 - 3 * liquidityPoolWidth - marginX;
   liquidityPoolY = canvasHeight / 2 - liquidityPoolHeight - marginY;
 
   incentivePoolX =
-    canvasWidth / 2 - 3 * incentivePoolWidth - marginX + incentivePoolWidth * 2;
+    canvasWidth / 2 - 3 * incentivePoolWidth - marginX + incentivePoolWidth * 4;
   incentivePoolY = canvasHeight / 2 - incentivePoolHeight - marginY;
+
+  sliderY = liquidityPoolY + liquidityPoolHeight * 1.75;
+  sliderX = liquidityPoolX;
 
   createCanvas(canvasWidth, canvasHeight);
 
   addLiquidityButton = drawButton(
     "addLiquidityERC20",
     liquidityPoolX,
-    canvasHeight / 2,
+    canvasHeight / 1.7,
     addLiquidityERC20
   );
   addLiquidityInput = drawInput(
     liquidityPoolX + addLiquidityButton.width,
-    canvasHeight / 2,
+    canvasHeight / 1.7,
     50,
     setAddLiquidityInputValue
   );
@@ -90,12 +102,12 @@ function setup() {
   removeLiquidityButton = drawButton(
     "removeLiquidityERC20",
     liquidityPoolX,
-    canvasHeight / 2 + addLiquidityButton.height,
+    canvasHeight / 1.7 + addLiquidityButton.height,
     removeLiquidityERC20
   );
   removeLiquidityInput = drawInput(
     liquidityPoolX + removeLiquidityButton.width,
-    canvasHeight / 2 + addLiquidityInput.height,
+    canvasHeight / 1.7 + addLiquidityInput.height,
     50,
     setRemoveLiquidityInputValue
   );
@@ -103,12 +115,12 @@ function setup() {
   depositButton = drawButton(
     "depositERC20",
     liquidityPoolX,
-    canvasHeight / 2 + addLiquidityButton.height * 2,
+    canvasHeight / 1.7 + addLiquidityButton.height * 2,
     depositERC20
   );
   depositInput = drawInput(
     liquidityPoolX + depositButton.width,
-    canvasHeight / 2 + addLiquidityButton.height * 2,
+    canvasHeight / 1.7 + addLiquidityButton.height * 2,
     50,
     setDepositInputValue
   );
@@ -116,12 +128,12 @@ function setup() {
   releaseButton = drawButton(
     "releaseERC20",
     liquidityPoolX,
-    canvasHeight / 2 + addLiquidityButton.height * 3,
+    canvasHeight / 1.7 + addLiquidityButton.height * 3,
     releaseERC20
   );
   depositInput = drawInput(
     liquidityPoolX + releaseButton.width,
-    canvasHeight / 2 + releaseButton.height * 3,
+    canvasHeight / 1.7 + releaseButton.height * 3,
     50,
     setReleaseInputValue
   );
@@ -129,7 +141,7 @@ function setup() {
   resetButton = drawButton(
     "Reset",
     liquidityPoolX,
-    canvasHeight / 2 + releaseButton.height * 8,
+    canvasHeight / 1.7 + releaseButton.height * 8,
     reset
   );
 
@@ -137,8 +149,8 @@ function setup() {
     0,
     100,
     50,
-    liquidityPoolX,
-    canvasHeight / 2 + depositButton.height * 5.55,
+    sliderX,
+    sliderY,
     refreshPunishment
   );
 
@@ -146,8 +158,8 @@ function setup() {
     0,
     100,
     50,
-    liquidityPoolX + canvasWidth / 10,
-    canvasHeight / 2 + depositButton.height * 5.55,
+    sliderX + liquidityPoolWidth * 1.8,
+    sliderY,
     setEquilibriumLiquidity
   );
 
@@ -155,9 +167,18 @@ function setup() {
     0,
     100,
     50,
-    liquidityPoolX + (canvasWidth / 10) * 2,
-    canvasHeight / 2 + depositButton.height * 5.55,
+    sliderX + liquidityPoolWidth * 1.8 * 2,
+    sliderY,
     setPoolLiquidity
+  );
+
+  incentivePoolLiquiditySlider = drawSlider(
+    0,
+    100,
+    0,
+    sliderX + liquidityPoolWidth * 1.8 * 3,
+    sliderY,
+    setIncentivePoolLiquidity
   );
 }
 
@@ -170,7 +191,11 @@ function draw() {
     unscaledLiquidityPoolBalance
   );
   drawInfoText(liquidityPoolX, liquidityPoolY, incentivePoolReward);
-  drawIncentivePool(incentivePoolX, incentivePoolY, incentivePoolBalance);
+  drawIncentivePool(
+    incentivePoolX,
+    incentivePoolY,
+    unscaledIncentivePoolBalance
+  );
 }
 
 function drawLine(color, x1, y1, x2, y2) {
@@ -187,6 +212,7 @@ function drawLiquidityPool(
 ) {
   rect(x, y, liquidityPoolWidth, liquidityPoolHeight, roundFactor);
   // Equilibrium liquidity line
+  strokeWeight(4);
   drawLine(
     "red",
     x,
@@ -202,72 +228,92 @@ function drawLiquidityPool(
     x + liquidityPoolWidth,
     y + unscaledLiquidityPoolBalance
   );
+  strokeWeight(1);
 }
 
 function drawInfoText(x, y, reward) {
+  textSize(liquidityPoolHeight / 10);
+  const shiftX = liquidityPoolWidth * 1.3;
+  const shiftY = textSize();
+
   text("Liquidity pool", x, y - textSize());
+  textSize(liquidityPoolHeight / 10);
+  text(
+    ` Punishment factor: ${
+      !maxPunishmentSlider ? 0 : maxPunishmentSlider.value()
+    }`,
+    x + shiftX,
+    y + (liquidityPoolHeight - shiftY)
+  );
   stroke("red");
   text(
-    `Equilibrium liquidity: ${equilibriumLiquidity}`,
-    x,
-    y + liquidityPoolHeight + 2 * textSize()
+    ` Equilibrium liquidity: ${equilibriumLiquidity}`,
+    x + shiftX,
+    y + (liquidityPoolHeight - 2 * shiftY)
   );
   stroke("blue");
   text(
-    `Liquidity pool balance: ${liquidityPoolBalance}`,
-    x,
-    y + liquidityPoolHeight + 3 * textSize()
+    ` Liquidity pool balance: ${liquidityPoolBalance}`,
+    x + shiftX,
+    y + (liquidityPoolHeight - 3 * shiftY)
   );
   stroke("gray");
   text(
-    `Reward / Punishment: ${reward}`,
-    x,
-    y + liquidityPoolHeight + 4 * textSize()
+    ` Reward / Punishment: ${(reward * incentivePoolHeight) / 100}`,
+    x + shiftX,
+    y + (liquidityPoolHeight - 4 * shiftY)
   );
   stroke("green");
   text(
-    `Incentive pool balance: ${incentivePoolBalance}`,
-    x,
-    y + liquidityPoolHeight + 5 * textSize()
+    ` Incentive pool balance: ${incentivePoolBalance}`,
+    x + shiftX,
+    y + (liquidityPoolHeight - 5 * shiftY)
   );
   stroke("gray");
-  text(
-    `Punishment factor: ${
-      !maxPunishmentSlider ? 0 : maxPunishmentSlider.value()
-    }`,
-    x,
-    y + liquidityPoolHeight + 6 * textSize()
-  );
+  textSize(liquidityPoolHeight / 8);
+  text("Stats: ", x + shiftX, y + (liquidityPoolHeight - 6.5 * shiftY));
+
+  textSize(liquidityPoolHeight / 7);
+  text("Set starting values", sliderX, sliderY - textSize());
   text(
     "Function call simulator",
     liquidityPoolX,
-    canvasHeight / 2 - textSize()
+    canvasHeight / 1.7 - textSize()
   );
   textSize(liquidityPoolHeight / 10);
+
   text(
-    "Punishment",
-    liquidityPoolX,
-    canvasHeight / 2 + depositButton.height * 5.25
+    "Punishment factor",
+    sliderX,
+    sliderY + maxPunishmentSlider.height + 1.1 * textSize()
   );
+
   text(
-    "Equilibrium",
-    liquidityPoolX + canvasWidth / 10,
-    canvasHeight / 2 + depositButton.height * 5.25
+    "Equilibrium liquidity",
+    sliderX + liquidityPoolWidth * 1.8,
+    sliderY + maxPunishmentSlider.height + 1.1 * textSize()
   );
+
   text(
-    "Liquidity",
-    liquidityPoolX + (canvasWidth / 10) * 2,
-    canvasHeight / 2 + depositButton.height * 5.25
+    "Pool balance",
+    sliderX + liquidityPoolWidth * 1.8 * 2,
+    sliderY + maxPunishmentSlider.height + 1.1 * textSize()
   );
-  textSize(liquidityPoolHeight / 8);
+
+  text(
+    "Incentive pool balance",
+    sliderX + liquidityPoolWidth * 1.8 * 3,
+    sliderY + maxPunishmentSlider.height + 1.1 * textSize()
+  );
 }
 
 // Draw functions
 
 function drawIncentivePool(x, y, unscaledLiquidityPoolBalance) {
-  textSize(liquidityPoolHeight / 8);
+  textSize(liquidityPoolHeight / 10);
   text("Incentive pool", x, y - textSize());
   rect(x, y, incentivePoolWidth, incentivePoolHeight, roundFactor);
+  strokeWeight(4);
   stroke("green");
   line(
     x,
@@ -275,6 +321,7 @@ function drawIncentivePool(x, y, unscaledLiquidityPoolBalance) {
     x + incentivePoolWidth,
     y - unscaledLiquidityPoolBalance + incentivePoolHeight
   );
+  strokeWeight(1);
   stroke("gray");
 }
 
@@ -352,6 +399,7 @@ function releaseERC20() {
   );
 
   incentivePoolReward = -punishment;
+  unscaledIncentivePoolBalance += (punishment * incentivePoolHeight) / 100;
   incentivePoolBalance += punishment;
   liquidityPoolBalance = newLiquidityPoolBalance;
   unscaledLiquidityPoolBalance +=
@@ -373,7 +421,8 @@ function depositERC20() {
   );
 
   incentivePoolReward = reward;
-  incentivePoolBalance -= incentivePoolReward;
+  incentivePoolBalance -= reward;
+  unscaledIncentivePoolBalance -= (reward * incentivePoolHeight) / 100;
   liquidityPoolBalance = newLiquidityPoolBalance;
   unscaledLiquidityPoolBalance -=
     (Number(depositInputValue) * liquidityPoolHeight) / 100;
@@ -433,7 +482,7 @@ function refreshPunishment() {
   const reward = getReward(
     liquidityPoolHeight - unscaledEquilibriumLiquidity,
     liquidityPoolHeight - unscaledLiquidityPoolBalance,
-    incentivePoolBalance,
+    unscaledIncentivePoolBalance,
     Number(depositInputValue)
   );
   incentivePoolReward = punishment !== 0 ? -punishment : reward;
@@ -447,10 +496,12 @@ function reset() {
 
   unscaledEquilibriumLiquidity = liquidityPoolHeight / 2;
   unscaledLiquidityPoolBalance = unscaledEquilibriumLiquidity;
+  unscaledIncentivePoolBalance = 0;
 
   maxPunishmentSlider.value(50);
   equilibriumLiquiditySlider.value(50);
   poolLiquiditySlider.value(50);
+  incentivePoolLiquiditySlider.value(0);
 }
 
 // Setters
@@ -479,6 +530,13 @@ function setPoolLiquidity() {
   liquidityPoolBalance = this.value();
   unscaledLiquidityPoolBalance =
     liquidityPoolHeight - (liquidityPoolBalance * liquidityPoolHeight) / 100;
+}
+
+function setIncentivePoolLiquidity() {
+  incentivePoolBalance = this.value();
+  unscaledIncentivePoolBalance =
+    (incentivePoolBalance * incentivePoolHeight) / 100;
+  incentivePoolBalance = incentivePoolBalance;
 }
 
 function setEquilibriumLiquidity() {
