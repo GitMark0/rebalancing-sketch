@@ -131,7 +131,7 @@ function setup() {
     canvasHeight / 1.7 + addLiquidityButton.height * 3,
     releaseERC20
   );
-  depositInput = drawInput(
+  releaseInput = drawInput(
     liquidityPoolX + releaseButton.width,
     canvasHeight / 1.7 + releaseButton.height * 3,
     50,
@@ -141,7 +141,7 @@ function setup() {
   resetButton = drawButton(
     "Reset",
     liquidityPoolX,
-    canvasHeight / 1.7 + releaseButton.height * 8,
+    canvasHeight / 1.7 + releaseButton.height * 6,
     reset
   );
 
@@ -259,13 +259,15 @@ function drawInfoText(x, y, reward) {
   );
   stroke("gray");
   text(
-    ` Reward / Punishment: ${(reward * incentivePoolHeight) / 100}`,
+    ` Reward / Punishment: ${((reward * incentivePoolHeight) / 100).toFixed(
+      3
+    )}`,
     x + shiftX,
     y + (liquidityPoolHeight - 4 * shiftY)
   );
   stroke("green");
   text(
-    ` Incentive pool balance: ${incentivePoolBalance}`,
+    ` Incentive pool balance: ${incentivePoolBalance.toFixed(3)}`,
     x + shiftX,
     y + (liquidityPoolHeight - 5 * shiftY)
   );
@@ -304,6 +306,30 @@ function drawInfoText(x, y, reward) {
     "Incentive pool balance",
     sliderX + liquidityPoolWidth * 1.8 * 3,
     sliderY + maxPunishmentSlider.height + 1.1 * textSize()
+  );
+
+  text(
+    " - Provide liquidity to the ERC20 bridge. Increases liquidity pool balance and equilibrium liquidity.",
+    liquidityPoolX + addLiquidityButton.width + addLiquidityInput.width,
+    canvasHeight / 1.7 + addLiquidityButton.height - textSize() / 2
+  );
+
+  text(
+    " - Remove liquidity from the ERC20 bridge. Decreases liquidity pool balance and equilibrium liquidity.",
+    liquidityPoolX + removeLiquidityButton.width + removeLiquidityInput.width,
+    canvasHeight / 1.7 + addLiquidityButton.height * 2 - textSize() / 2
+  );
+
+  text(
+    " - Start bridging by depositing amount of ERC20 tokens. Increases pool balance. Reward is provided if the pool balance is below equilibrium and incentive pool balance > 0.",
+    liquidityPoolX + depositButton.width + depositInput.width,
+    canvasHeight / 1.7 + addLiquidityButton.height * 3 - textSize() / 2
+  );
+
+  text(
+    " - Finalize bridging by releasing amount of ERC20 tokens. Decreases pool balance. Punishment is given if the pool balance goes below below equilibrium.",
+    liquidityPoolX + releaseButton.width + releaseInput.width,
+    canvasHeight / 1.7 + addLiquidityButton.height * 4 - textSize() / 2
   );
 }
 
@@ -367,6 +393,8 @@ function addLiquidityERC20() {
     unscaledLiquidityPoolBalance -=
       (Number(addLiquidityInputValue) * liquidityPoolHeight) / 100;
   }
+
+  addLiquidityInput.value("");
 }
 
 function removeLiquidityERC20() {
@@ -383,6 +411,8 @@ function removeLiquidityERC20() {
     unscaledLiquidityPoolBalance +=
       (Number(addLiquidityInputValue) * liquidityPoolHeight) / 100;
   }
+
+  removeLiquidityInput.value("");
 }
 
 function releaseERC20() {
@@ -404,6 +434,8 @@ function releaseERC20() {
   liquidityPoolBalance = newLiquidityPoolBalance;
   unscaledLiquidityPoolBalance +=
     (Number(releaseInputValue) * liquidityPoolHeight) / 100;
+
+  releaseInput.value("");
 }
 
 function depositERC20() {
@@ -426,6 +458,8 @@ function depositERC20() {
   liquidityPoolBalance = newLiquidityPoolBalance;
   unscaledLiquidityPoolBalance -=
     (Number(depositInputValue) * liquidityPoolHeight) / 100;
+
+  depositInput.value("");
 }
 
 // UTILS
