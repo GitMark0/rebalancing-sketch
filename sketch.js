@@ -239,7 +239,7 @@ function drawInfoText(x, y, reward) {
   text("Liquidity pool", x, y - textSize());
   textSize(liquidityPoolHeight / 10);
   text(
-    ` Punishment factor: ${
+    ` Maximum punishment: ${
       !maxPunishmentSlider ? 0 : maxPunishmentSlider.value()
     }`,
     x + shiftX,
@@ -285,7 +285,7 @@ function drawInfoText(x, y, reward) {
   textSize(liquidityPoolHeight / 10);
 
   text(
-    "Punishment factor",
+    "Maximum punishment",
     sliderX,
     sliderY + maxPunishmentSlider.height + 1.1 * textSize()
   );
