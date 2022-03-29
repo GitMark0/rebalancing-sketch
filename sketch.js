@@ -6,22 +6,7 @@ let marginY;
 
 // Buttons and inputs
 let resetButton;
-
-let addLiquidityButton;
-let addLiquidityInput;
-let addLiquidityInputValue = 0;
-
-let removeLiquidityButton;
-let removeLiquidityInput;
-let removeLiquidityInputValue = 0;
-
-let depositButton;
-let depositInput;
-let depositInputValue = 0;
-
-let releaseButton;
-let releaseInput;
-let releaseInputValue = 0;
+let bridgeActionInput = 0;
 
 // Liquidity pool dimensions
 let liquidityPoolWidth;
@@ -56,6 +41,11 @@ let sliderY;
 let sliderX;
 
 let coinTypeFeeRadio;
+let bridgeActionRadio;
+let coinTypeFeeDiv;
+let bridgeActionRadioDiv;
+
+let displayText = "THIS MESSAGE WILL BE REPLACED AS YOU UPDATE PARAMS...";
 
 function setup() {
   canvasWidth = displayWidth;
@@ -88,112 +78,83 @@ function setup() {
 
   createCanvas(canvasWidth, canvasHeight);
 
-  addLiquidityButton = drawButton(
-    "addLiquidityERC20",
-    liquidityPoolX,
-    canvasHeight / 1.7,
-    addLiquidityERC20
-  );
-  addLiquidityInput = drawInput(
-    liquidityPoolX + addLiquidityButton.width,
-    canvasHeight / 1.7,
-    50,
-    setAddLiquidityInputValue
+  bridgeActionRadioDiv = document.createElement("div");
+  bridgeActionRadioDiv.style.position = "absolute";
+  bridgeActionRadioDiv.style.top = `${sliderY + canvasHeight / 4}px`;
+  bridgeActionRadioDiv.style.left = `${sliderX}px`;
+  bridgeActionRadioDiv.style.margin = "0px";
+
+  bridgeActionRadio = createRadio(bridgeActionRadioDiv);
+  bridgeActionRadio.option("1", "Deposit to bridge");
+  bridgeActionRadio.option("2", "Withdraw from bridge");
+  bridgeActionRadio.style("font-size", "18px");
+  bridgeActionRadio.selected("2");
+  bridgeActionRadio.attribute("name", "first");
+  bridgeActionRadio.changed(displayBridgingResult);
+
+  bridgeActionInput = drawInput(
+    sliderX + textSize() * 5,
+    sliderY + canvasHeight / 4 + textSize() * 4,
+    100,
+    displayBridgingResult
   );
 
-  removeLiquidityButton = drawButton(
-    "removeLiquidityERC20",
-    liquidityPoolX,
-    canvasHeight / 1.7 + addLiquidityButton.height,
-    removeLiquidityERC20
-  );
-  removeLiquidityInput = drawInput(
-    liquidityPoolX + removeLiquidityButton.width,
-    canvasHeight / 1.7 + addLiquidityInput.height,
-    50,
-    setRemoveLiquidityInputValue
-  );
-
-  depositButton = drawButton(
-    "depositERC20",
-    liquidityPoolX,
-    canvasHeight / 1.7 + addLiquidityButton.height * 2,
-    depositERC20
-  );
-  depositInput = drawInput(
-    liquidityPoolX + depositButton.width,
-    canvasHeight / 1.7 + addLiquidityButton.height * 2,
-    50,
-    setDepositInputValue
-  );
-
-  releaseButton = drawButton(
-    "releaseERC20",
-    liquidityPoolX,
-    canvasHeight / 1.7 + addLiquidityButton.height * 3,
-    releaseERC20
-  );
-  releaseInput = drawInput(
-    liquidityPoolX + releaseButton.width,
-    canvasHeight / 1.7 + releaseButton.height * 3,
-    50,
-    setReleaseInputValue
-  );
-
-  resetButton = drawButton(
-    "Reset",
-    liquidityPoolX,
-    canvasHeight / 1.7 + releaseButton.height * 6,
-    reset
-  );
+  resetButton = drawButton("Reset", sliderX, sliderY + canvasHeight / 3, reset);
 
   maxPunishmentSlider = drawSlider(
     0,
     100,
     50,
-    sliderX,
+    sliderX + liquidityPoolWidth * 1.8 * 3,
     sliderY,
-    refreshPunishment
+    null,
+    displayBridgingResult
   );
 
   equilibriumLiquiditySlider = drawSlider(
     0,
     100,
     50,
-    sliderX + liquidityPoolWidth * 1.8,
+    sliderX + liquidityPoolWidth * 1.8 * 2,
     sliderY,
-    setEquilibriumLiquidity
+
+    setEquilibriumLiquidity,
+    displayBridgingResult
   );
 
   poolLiquiditySlider = drawSlider(
     0,
     100,
     50,
-    sliderX + liquidityPoolWidth * 1.8 * 2,
+    sliderX + liquidityPoolWidth * 1.8,
     sliderY,
-    setPoolLiquidity
+    setPoolLiquidity,
+    displayBridgingResult
   );
 
   incentivePoolLiquiditySlider = drawSlider(
     0,
     100,
     0,
-    sliderX + liquidityPoolWidth * 1.8 * 3,
+    sliderX,
     sliderY,
-    setIncentivePoolLiquidity
+    setIncentivePoolLiquidity,
+    displayBridgingResult
   );
 
-  let coinTypeFeeDiv = document.createElement("div");
+  coinTypeFeeDiv = document.createElement("div");
   coinTypeFeeDiv.style.position = "absolute";
-  coinTypeFeeDiv.style.top = `${sliderY}px`;
-  coinTypeFeeDiv.style.left = `${sliderX + liquidityPoolWidth * 1.8 * 4}px`;
+  coinTypeFeeDiv.style.top = `${sliderY + canvasHeight / 7}px`;
+  coinTypeFeeDiv.style.left = `${sliderX}px`;
   coinTypeFeeDiv.style.margin = "0px";
 
   coinTypeFeeRadio = createRadio(coinTypeFeeDiv);
-  coinTypeFeeRadio.option("1", "stable coin");
-  coinTypeFeeRadio.option("2", "non-stable coin");
-  coinTypeFeeRadio.style("height", "50px");
+  coinTypeFeeRadio.option("1", "Stable coin");
+  coinTypeFeeRadio.option("2", "Non-stable coin");
+  coinTypeFeeRadio.style("font-size", "18px");
   coinTypeFeeRadio.selected("2");
+  coinTypeFeeRadio.attribute("name", "second");
+  coinTypeFeeRadio.changed(displayBridgingResult);
 }
 
 function draw() {
@@ -210,6 +171,11 @@ function draw() {
     incentivePoolY,
     unscaledIncentivePoolBalance
   );
+  textSize(liquidityPoolHeight / 5);
+  text(displayText, canvasWidth / 10, 100);
+  textSize(liquidityPoolHeight / 10);
+
+  text("Amount:", sliderX, sliderY + canvasHeight / 4 + textSize() * 4);
 }
 
 function drawLine(color, x1, y1, x2, y2) {
@@ -295,60 +261,43 @@ function drawInfoText(x, y, reward) {
   text("Stats: ", x + shiftX, y + (liquidityPoolHeight - 7.5 * shiftY));
 
   textSize(liquidityPoolHeight / 7);
-  text("Set starting values", sliderX, sliderY - textSize());
+  text("1. Set Pool State", sliderX, sliderY - textSize());
+  textSize(liquidityPoolHeight / 10);
+
+  textSize(liquidityPoolHeight / 7);
+  text("2. Pick Crypto Type", sliderX, sliderY + canvasHeight / 8 - textSize());
+  textSize(liquidityPoolHeight / 10);
+
+  textSize(liquidityPoolHeight / 7);
   text(
-    "Function call simulator",
-    liquidityPoolX,
-    canvasHeight / 1.7 - textSize()
+    "3. Input Amount and Pick Action",
+    sliderX,
+    sliderY + canvasHeight / 4 - textSize()
   );
   textSize(liquidityPoolHeight / 10);
 
   text(
-    "Maximum punishment",
+    "Incentive pool balance",
     sliderX,
     sliderY + maxPunishmentSlider.height + 1.1 * textSize()
   );
 
   text(
-    "Equilibrium liquidity",
+    "Pool balance",
     sliderX + liquidityPoolWidth * 1.8,
     sliderY + maxPunishmentSlider.height + 1.1 * textSize()
   );
 
   text(
-    "Pool balance",
+    "Equilibrium liquidity",
     sliderX + liquidityPoolWidth * 1.8 * 2,
     sliderY + maxPunishmentSlider.height + 1.1 * textSize()
   );
 
   text(
-    "Incentive pool balance",
+    "Maximum punishment",
     sliderX + liquidityPoolWidth * 1.8 * 3,
     sliderY + maxPunishmentSlider.height + 1.1 * textSize()
-  );
-
-  text(
-    " - Provide liquidity to the ERC20 bridge. Increases liquidity pool balance and equilibrium liquidity.",
-    liquidityPoolX + addLiquidityButton.width + addLiquidityInput.width,
-    canvasHeight / 1.7 + addLiquidityButton.height - textSize() / 2
-  );
-
-  text(
-    " - Remove liquidity from the ERC20 bridge. Decreases liquidity pool balance and equilibrium liquidity.",
-    liquidityPoolX + removeLiquidityButton.width + removeLiquidityInput.width,
-    canvasHeight / 1.7 + addLiquidityButton.height * 2 - textSize() / 2
-  );
-
-  text(
-    " - Start bridging by depositing amount of ERC20 tokens. Increases pool balance. Reward is provided if the pool balance is below equilibrium and incentive pool balance > 0.",
-    liquidityPoolX + depositButton.width + depositInput.width,
-    canvasHeight / 1.7 + addLiquidityButton.height * 3 - textSize() / 2
-  );
-
-  text(
-    " - Finalize bridging by releasing amount of ERC20 tokens. Decreases pool balance. Punishment is given if the pool balance goes below below equilibrium.",
-    liquidityPoolX + releaseButton.width + releaseInput.width,
-    canvasHeight / 1.7 + addLiquidityButton.height * 4 - textSize() / 2
   );
 }
 
@@ -387,11 +336,26 @@ function drawInput(x, y, size, handler) {
   return input;
 }
 
-function drawSlider(minRange, maxRange, startingValue, x, y, handler) {
+function drawSlider(
+  minRange,
+  maxRange,
+  startingValue,
+  x,
+  y,
+  handler,
+  changeHandler
+) {
   const slider = createSlider(minRange, maxRange, startingValue);
   slider.position(x, y);
   slider.style("width", "100px");
-  slider.input(handler);
+
+  if (handler) {
+    slider.input(handler);
+  }
+
+  if (changeHandler) {
+    slider.changed(changeHandler);
+  }
 
   return slider;
 }
@@ -436,7 +400,7 @@ function removeLiquidityERC20() {
 
 function releaseERC20() {
   const newLiquidityPoolBalance =
-    liquidityPoolBalance - Number(releaseInputValue);
+    liquidityPoolBalance - Number(bridgeActionInput);
   if (newLiquidityPoolBalance < 0) {
     return;
   }
@@ -444,7 +408,7 @@ function releaseERC20() {
   const punishment = getPunishment(
     equilibriumLiquidity,
     liquidityPoolBalance,
-    Number(releaseInputValue)
+    Number(bridgeActionInput)
   );
 
   incentivePoolReward = -punishment;
@@ -452,14 +416,14 @@ function releaseERC20() {
   incentivePoolBalance += punishment;
   liquidityPoolBalance = newLiquidityPoolBalance;
   unscaledLiquidityPoolBalance +=
-    (Number(releaseInputValue) * liquidityPoolHeight) / 100;
+    (Number(bridgeActionInput) * liquidityPoolHeight) / 100;
 
   releaseInput.value("");
 }
 
 function depositERC20() {
   const newLiquidityPoolBalance =
-    liquidityPoolBalance + Number(depositInputValue);
+    liquidityPoolBalance + Number(bridgeActionInput);
   if (newLiquidityPoolBalance > 100) {
     return;
   }
@@ -468,7 +432,7 @@ function depositERC20() {
     equilibriumLiquidity,
     liquidityPoolBalance,
     incentivePoolBalance,
-    Number(depositInputValue)
+    Number(bridgeActionInput)
   );
 
   incentivePoolReward = reward;
@@ -476,7 +440,7 @@ function depositERC20() {
   unscaledIncentivePoolBalance -= (reward * incentivePoolHeight) / 100;
   liquidityPoolBalance = newLiquidityPoolBalance;
   unscaledLiquidityPoolBalance -=
-    (Number(depositInputValue) * liquidityPoolHeight) / 100;
+    (Number(bridgeActionInput) * liquidityPoolHeight) / 100;
 
   depositInput.value("");
 }
@@ -526,21 +490,6 @@ function getPunishment(
   return punishment;
 }
 
-function refreshPunishment() {
-  const punishment = getPunishment(
-    equilibriumLiquidity,
-    liquidityPoolBalance,
-    abs(Number(releaseInputValue))
-  );
-  const reward = getReward(
-    liquidityPoolHeight - unscaledEquilibriumLiquidity,
-    liquidityPoolHeight - unscaledLiquidityPoolBalance,
-    unscaledIncentivePoolBalance,
-    Number(depositInputValue)
-  );
-  incentivePoolReward = punishment !== 0 ? -punishment : reward;
-}
-
 function reset() {
   incentivePoolBalance = 0;
   incentivePoolReward = 0;
@@ -559,24 +508,8 @@ function reset() {
 
 // Setters
 
-function setAddLiquidityInputValue() {
-  addLiquidityInputValue = this.value();
-}
-
-function setRemoveLiquidityInputValue() {
-  removeLiquidityInputValue = this.value();
-}
-
-function setDepositInputValue() {
-  depositInputValue = this.value();
-
-  refreshPunishment();
-}
-
-function setReleaseInputValue() {
-  releaseInputValue = this.value();
-
-  refreshPunishment();
+function setbridgeActionInput() {
+  bridgeActionInput = this.value();
 }
 
 function setPoolLiquidity() {
@@ -596,4 +529,41 @@ function setEquilibriumLiquidity() {
   equilibriumLiquidity = this.value();
   unscaledEquilibriumLiquidity =
     liquidityPoolHeight - (equilibriumLiquidity * liquidityPoolHeight) / 100;
+}
+
+function displayBridgingResult() {
+  const inputValue = Number(bridgeActionInput.value());
+  const radioValue = bridgeActionRadio.value();
+  const tokenFee = coinTypeFeeRadio.value() === "1" ? 0.15 : 0.35;
+
+  switch (radioValue) {
+    case "1":
+      const reward = getReward(
+        equilibriumLiquidity,
+        liquidityPoolBalance,
+        incentivePoolBalance,
+        inputValue
+      );
+      displayText = `You will receive: ${reward} from incentive pool and will need to pay ${
+        tokenFee * inputValue
+      } bridging fees.\nIn total you will be left with: ${
+        inputValue + reward - tokenFee * inputValue
+      }`;
+
+      break;
+    case "2":
+      const punishment = getPunishment(
+        equilibriumLiquidity,
+        liquidityPoolBalance,
+        inputValue
+      );
+      displayText = `You will need to pay: ${punishment} to incentive pool and ${
+        tokenFee * inputValue
+      } bridging fees.\nIn total you will be left with: ${
+        inputValue - punishment - tokenFee * inputValue
+      }`;
+      break;
+    default:
+      console.log("unknown");
+  }
 }
