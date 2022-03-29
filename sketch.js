@@ -55,6 +55,8 @@ let incentivePoolLiquiditySlider;
 let sliderY;
 let sliderX;
 
+let coinTypeFeeRadio;
+
 function setup() {
   canvasWidth = displayWidth;
   canvasHeight = displayHeight;
@@ -180,6 +182,18 @@ function setup() {
     sliderY,
     setIncentivePoolLiquidity
   );
+
+  let coinTypeFeeDiv = document.createElement("div");
+  coinTypeFeeDiv.style.position = "absolute";
+  coinTypeFeeDiv.style.top = `${sliderY}px`;
+  coinTypeFeeDiv.style.left = `${sliderX + liquidityPoolWidth * 1.8 * 4}px`;
+  coinTypeFeeDiv.style.margin = "0px";
+
+  coinTypeFeeRadio = createRadio(coinTypeFeeDiv);
+  coinTypeFeeRadio.option("1", "stable coin");
+  coinTypeFeeRadio.option("2", "non-stable coin");
+  coinTypeFeeRadio.style("height", "50px");
+  coinTypeFeeRadio.selected("2");
 }
 
 function draw() {
@@ -239,23 +253,28 @@ function drawInfoText(x, y, reward) {
   text("Liquidity pool", x, y - textSize());
   textSize(liquidityPoolHeight / 10);
   text(
+    ` Release fee: ${coinTypeFeeRadio.value() === "1" ? "0.15%" : "0.35%"}`,
+    x + shiftX,
+    y + (liquidityPoolHeight - shiftY)
+  );
+  text(
     ` Maximum punishment: ${
       !maxPunishmentSlider ? 0 : maxPunishmentSlider.value()
     }`,
     x + shiftX,
-    y + (liquidityPoolHeight - shiftY)
+    y + (liquidityPoolHeight - 2 * shiftY)
   );
   stroke("red");
   text(
     ` Equilibrium liquidity: ${equilibriumLiquidity}`,
     x + shiftX,
-    y + (liquidityPoolHeight - 2 * shiftY)
+    y + (liquidityPoolHeight - 3 * shiftY)
   );
   stroke("blue");
   text(
     ` Liquidity pool balance: ${liquidityPoolBalance}`,
     x + shiftX,
-    y + (liquidityPoolHeight - 3 * shiftY)
+    y + (liquidityPoolHeight - 4 * shiftY)
   );
   stroke("gray");
   text(
@@ -263,17 +282,17 @@ function drawInfoText(x, y, reward) {
       3
     )}`,
     x + shiftX,
-    y + (liquidityPoolHeight - 4 * shiftY)
+    y + (liquidityPoolHeight - 5 * shiftY)
   );
   stroke("green");
   text(
     ` Incentive pool balance: ${incentivePoolBalance.toFixed(3)}`,
     x + shiftX,
-    y + (liquidityPoolHeight - 5 * shiftY)
+    y + (liquidityPoolHeight - 6 * shiftY)
   );
   stroke("gray");
   textSize(liquidityPoolHeight / 8);
-  text("Stats: ", x + shiftX, y + (liquidityPoolHeight - 6.5 * shiftY));
+  text("Stats: ", x + shiftX, y + (liquidityPoolHeight - 7.5 * shiftY));
 
   textSize(liquidityPoolHeight / 7);
   text("Set starting values", sliderX, sliderY - textSize());
